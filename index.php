@@ -95,11 +95,6 @@ if(isset($_SESSION['user_id'])) {
 
 </div>
 
-<address class="footer navbar-fixed-bottom"> <!-- Address used for mailto: email address in footer -->
-<footer class="footer navbar-fixed-bottom px-1">
-<p>Developed by Jordan Bolton for Accordial Manufacturing Ltd.</p>
-<p>Contact: <a href="mailto:jordanbolton1999@gmail.com">jordanbolton1999@gmail.com</a></p>
-</footer>
 </address>
 </body>
 <!-- bootstrap scripts -->
