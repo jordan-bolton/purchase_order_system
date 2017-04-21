@@ -4,7 +4,6 @@ session_start(); // starts a PHP session
 
 // include the classes file and create a new object of the class
 require __DIR__ . '/php/classLib.php';
-$func = new userLogin();
 
 // define an empty variable to be used for error messages
 $errorMessage = '';
@@ -30,8 +29,10 @@ if(!empty($_POST['submit'])) {
 		$errorMessage = "Please enter a password";
 	}
 	else { // if both a username or password is entered:
-		$userID = $func->processLogin($username, $password); // userID is an object of the processLogin class
+		$func = new userLogin($username, $password);
+		$userID = $func->processLogin();  // userID is an object of the processLogin class
 		if ($userID > 0) {
+			echo $userID;
 			$_SESSION['user_id'] = $userID; // set the $_SESSION value 'user_id' equal to the user's ID to show the login is valid
 			header("Location: php/welcome.php");  // redirects to the member pages after successful login
 			exit; // terminates current page if login is successful
@@ -50,8 +51,6 @@ if(isset($_SESSION['user_id'])) {
 }
 
 ?>
-
-
 
 <!DOCTYPE html>
 <!-- Main login page HTML -->
@@ -83,7 +82,7 @@ if(isset($_SESSION['user_id'])) {
 	<label>Enter Password</label><br>
 	<input type="password" class="form-control" name="password" placeholder="Enter password here" required><br>
 	</div>
-	<input type="submit" name="submit" value="Login">
+	<input class="form-control btn btn-primary" type="submit" name="submit" value="Login">
 	<?php 
 	if(!empty($errorMessage)) {
 	?>
@@ -92,6 +91,11 @@ if(isset($_SESSION['user_id'])) {
 	}
 	?>
 </form>
+
+</div>
+
+<div id="register">
+<h2>Register <a href="register.php">Here</a></h2>
 
 </div>
 

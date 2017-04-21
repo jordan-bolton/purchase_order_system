@@ -8,7 +8,7 @@ if(empty($_SESSION['user_id'])) { // If user is not logged in, redirect to the l
 
 
 require __DIR__ . '/classLib.php';
-$func = new userLogin();
+$func = new userLogin($username, $password);
 $userDetails = $func->getUserDetails($_SESSION['user_id']);
 
 $order = new Order();

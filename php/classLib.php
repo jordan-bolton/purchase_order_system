@@ -2,21 +2,84 @@
 
 require __DIR__ . "/dbConfig.php";
 
-class userLogin // class for functions associated with users & logging in
-{
+class registerUser {
 
-public function processLogin($username, $password) // function used to log the user in
+public $username;
+protected $password;
+public $forename;
+public $surname;
+
+public function __construct($username, $password, $forename, $surname) {
+	$this->username = $username;
+	$this->password = $password;
+	$this->forename = $forename;
+	$this->surname = $surname;
+}
+
+public function registerUser() {
+	try {
+		$dbConnect = DBC();
+		$registerUser = $dbConnect->prepare("INSERT INTO users (username, password, forename, surname) VALUES (:username, :password, :forename, :surname)");
+		$registerUser->bindParam(":username", $this->username, PDO::PARAM_STR);
+		$hashedPassword = $this->generatePasswordHash($this->password);
+		$registerUser->bindParam(":password", $hashedPassword, PDO::PARAM_STR);
+		$registerUser->bindParam(":forename", $this->forename, PDO::PARAM_STR);
+		$registerUser->bindParam(":surname", $this->surname, PDO::PARAM_STR);
+		$registerUser->execute();
+		if ($registerUser->rowCount() > 0) {
+			return 1;
+		}
+	}
+	catch (PDOException $registerError) {
+		die($registerError->getMessage());
+	}
+}
+
+
+protected function generatePasswordHash($password) {
+	if (empty($password)) {
+		throw new Exception("Password can't be empty");
+	}
+	$options = [
+		'cost' => 12,
+	];
+	$hashedPassword = password_hash($password, PASSWORD_DEFAULT, $options);
+	return $hashedPassword;
+}
+
+}
+
+
+class userLogin {
+public $username;
+public $password;
+
+
+public function __construct($username, $password) {
+	$this->username = $username;
+	$this->password = $password;
+}
+
+public function processLogin() // function used to log the user in
 {
 	try {
 		$dbConnect = DBC(); // object for connecting to the database
-		// prepares the SQL statement for execution
+		$dbConnect->beginTransaction();
+
+		$verifyCredentials = $dbConnect->prepare("SELECT password FROM users WHERE username = :username");
+		$verifyCredentials->bindParam(":username", $this->username, PDO::PARAM_STR);
+		$verifyCredentials->execute();
+
+		if ($verifyCredentials->rowCount() > 0) {
+			$dbPass = $verifyCredentials->fetchColumn();
+			if (password_verify($this->password, $dbPass)) {
+				$hashedPass = $dbPass;
+			}
+		}
+
 		$loginQuery = $dbConnect->prepare("SELECT userID FROM users WHERE username=:username AND password=:password");
-		// associates the username value in the SQL statement with the username variable passed through from the form
-		$loginQuery->bindParam(":username", $username, PDO::PARAM_STR); 
-		// encrypts the password using the sha256 algorithm
-		$passwordEncrypt = hash('sha256', $password);
-		// associates the password value in the SQL statement with the password variable passed through from the form
-		$loginQuery->bindParam(":password", $password, PDO::PARAM_STR);
+		$loginQuery->bindParam(":username", $this->username, PDO::PARAM_STR); 
+		$loginQuery->bindParam(":password", $hashedPass, PDO::PARAM_STR);
 		// executes the statement and returns the number of rows
 		$loginQuery->execute();
 		// if the query matches the data in the database, a row will be returned
@@ -29,9 +92,11 @@ public function processLogin($username, $password) // function used to log the u
 			// if the login is invalid
 			return false;
 		}
+		$dbConnect->commit();
 	}
 	catch (PDOException $errorMessage) {
 		die($errorMessage->getMessage()); // terminates and returns an error if one occurs
+		$dbConnect->rollBack();
 	}
 }
 
